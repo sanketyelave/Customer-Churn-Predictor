@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
-
+import os
 # Initialize Flask app
 app = Flask(__name__)
 
@@ -86,6 +86,8 @@ def predict():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Run the Flask app
+# Run the Flask import os
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Use Render's assigned port
+    app.run(host="0.0.0.0", port=port, debug=True)
