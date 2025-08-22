@@ -6,8 +6,6 @@ This project demonstrates an **end-to-end data science workflow** for predicting
 
 ## 📓 Final Notebook Overview
 
-The notebook `churn_prediction_final.ipynb` includes the following sections:
-
 ### 1. Intro
 - **Problem statement:** Predicting which customers are likely to churn.  
 - **Business impact:** Retaining customers reduces revenue loss and improves profitability.
