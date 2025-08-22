@@ -2,7 +2,6 @@
 from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
-import os
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -10,22 +9,32 @@ app = Flask(__name__)
 # Load the saved Random Forest model
 model = joblib.load("churn_model.pkl")
 
-# Define expected feature columns
+# All features the model was trained on
 feature_columns = [
-    'Contract', 'tenure', 'MonthlyCharges', 'TotalCharges',
-    'OnlineSecurity', 'TechSupport', 'InternetService',
-    'PaymentMethod', 'OnlineBackup', 'PaperlessBilling'
+    'gender', 'SeniorCitizen', 'Partner', 'Dependents', 'tenure',
+    'PhoneService', 'MultipleLines', 'InternetService', 'OnlineSecurity',
+    'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV',
+    'StreamingMovies', 'Contract', 'PaperlessBilling', 'PaymentMethod',
+    'MonthlyCharges', 'TotalCharges'
 ]
 
-# Define categories for categorical features
+# Categorical features and their possible values
 categorical_features = {
-    'Contract': ['Month-to-month', 'One year', 'Two year'],
-    'OnlineSecurity': ['Yes', 'No', 'No internet service'],
-    'TechSupport': ['Yes', 'No', 'No internet service'],
+    'gender': ['Female', 'Male'],
+    'Partner': ['Yes', 'No'],
+    'Dependents': ['Yes', 'No'],
+    'PhoneService': ['Yes', 'No'],
+    'MultipleLines': ['Yes', 'No', 'No phone service'],
     'InternetService': ['DSL', 'Fiber optic', 'No'],
-    'PaymentMethod': ['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)'],
+    'OnlineSecurity': ['Yes', 'No', 'No internet service'],
     'OnlineBackup': ['Yes', 'No', 'No internet service'],
-    'PaperlessBilling': ['Yes', 'No']
+    'DeviceProtection': ['Yes', 'No', 'No internet service'],
+    'TechSupport': ['Yes', 'No', 'No internet service'],
+    'StreamingTV': ['Yes', 'No', 'No internet service'],
+    'StreamingMovies': ['Yes', 'No', 'No internet service'],
+    'Contract': ['Month-to-month', 'One year', 'Two year'],
+    'PaperlessBilling': ['Yes', 'No'],
+    'PaymentMethod': ['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)']
 }
 
 # Home route
@@ -37,13 +46,25 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get JSON data from POST request
+        # Check content type
+        if not request.is_json:
+            return jsonify({"error": "Content-Type must be application/json"}), 415
+
         data = request.get_json()
 
         # Convert JSON to DataFrame
-        input_df = pd.DataFrame([data], columns=feature_columns)
+        input_df = pd.DataFrame([data])
 
-        # Encode categorical variables
+        # Ensure all model features are present
+        for col in feature_columns:
+            if col not in input_df.columns:
+                # Fill missing columns with default values
+                if col in categorical_features:
+                    input_df[col] = categorical_features[col][0]  # first category as default
+                else:
+                    input_df[col] = 0  # numeric default
+
+        # Encode categorical features
         for col, categories in categorical_features.items():
             input_df[col] = pd.Categorical(input_df[col], categories=categories).codes
 
@@ -63,9 +84,8 @@ def predict():
         return jsonify(response)
 
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 # Run the Flask app
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render sets this dynamically
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
