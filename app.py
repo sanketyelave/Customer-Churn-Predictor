@@ -2,6 +2,7 @@
 from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
+import os
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -9,14 +10,14 @@ app = Flask(__name__)
 # Load the saved Random Forest model
 model = joblib.load("churn_model.pkl")
 
-# Define the expected feature columns
+# Define expected feature columns
 feature_columns = [
-    'Contract', 'tenure', 'MonthlyCharges', 'TotalCharges', 
-    'OnlineSecurity', 'TechSupport', 'InternetService', 
+    'Contract', 'tenure', 'MonthlyCharges', 'TotalCharges',
+    'OnlineSecurity', 'TechSupport', 'InternetService',
     'PaymentMethod', 'OnlineBackup', 'PaperlessBilling'
 ]
 
-# Define possible categories for categorical features
+# Define categories for categorical features
 categorical_features = {
     'Contract': ['Month-to-month', 'One year', 'Two year'],
     'OnlineSecurity': ['Yes', 'No', 'No internet service'],
@@ -66,4 +67,5 @@ def predict():
 
 # Run the Flask app
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render sets this dynamically
+    app.run(host="0.0.0.0", port=port, debug=True)
